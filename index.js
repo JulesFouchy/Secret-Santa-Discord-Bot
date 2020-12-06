@@ -17,6 +17,11 @@ let inscriptionMessageLink
 let participants = {}
 let associations = {}
 
+let areInscriptionsStillOpen = true
+const inscriptionsStillOpen = () => {
+    return areInscriptionsStillOpen
+}
+
 const alreadyParticipating = (id) => {
     return participants[id] !== undefined
 }
@@ -117,6 +122,7 @@ Les inscriptions ferment le ${inscriptionEndDateStr}`
             if (msg.content.startsWith("!go")) {
                 createAssociations()
                 Object.keys(participants).forEach(id => sendTargetInfo(id))
+                areInscriptionsStillOpen = false
             }
         }
         else {
@@ -127,14 +133,24 @@ Les inscriptions ferment le ${inscriptionEndDateStr}`
 
 client.on('messageReactionAdd', async(e, user) => {
     if (e.message.id === inscriptionMessageID && e.emoji.identifier === '%F0%9F%8E%85') {
-        createParticipantIfNeeded(user)
-        user.send("🎅 🎅 🎅 🎅 🎅\nHohoho ! Tu es bien inscrit pour le secret santa E-Tacraft !\nTu peux m'envoyer ta lettre en faisant \`\`\`!lettre [tonMessage]\`\`\` ici même\n🎅 🎅 🎅 🎅 🎅")
+        if (inscriptionsStillOpen()) {
+            createParticipantIfNeeded(user)
+            user.send("🎅 🎅 🎅 🎅 🎅\nHohoho ! Tu es bien inscrit pour le secret santa E-Tacraft !\nTu peux m'envoyer ta lettre en faisant \`\`\`!lettre [tonMessage]\`\`\` ici même\n🎅 🎅 🎅 🎅 🎅")
+        }
+        else {
+            user.send("Oh 🎅 ! Malheureusement les inscriptions sont terminées et les Pères Noëls ont déjà été attribués.\n Contacte Nahjkag (Jules Fouchy#9268) pour arranger ça :wink:")
+        }
     }
 })
 
 client.on('messageReactionRemove', async(e, user) => {
     if (e.message.id === inscriptionMessageID && e.emoji.identifier === '%F0%9F%8E%85') {
-        user.send("Oh 🎅 ! Tu es bien désinscrit du secret santa E-Tacraft.")
-        delete participants[user.id]
+        if (inscriptionsStillOpen()) {
+            user.send("Oh 🎅 ! Tu es bien désinscrit du secret santa E-Tacraft.")
+            delete participants[user.id]
+        }
+        else {
+            user.send(`Hohoho 🎅 ! L'évènement a été lancé, tu ne peux plus te désinscrire ! **${participants[associations[user.id]].user.username}** compte sur toi !`)
+        }
     }
 })
