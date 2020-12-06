@@ -132,6 +132,9 @@ ${inscriptionMessageLink}
                     msg.author.send("Oh 🎅 ! Les inscriptions sont terminées et ta lettre a déjà été envoyée, tu ne peux plus la modifier !")
                 }
             }
+            else {
+                msg.author.send("Oh 🎅 ! Je ne connais pas cette commande. À vrai dire je connais uniquement la commande !lettre")
+            }
         }
         else {
             msg.author.send("Avant toute chose, tu dois t'inscrire en réagissant \"🎅\" sur mon message dans le channel E-Tacraft de la E-Taverne : " + inscriptionMessageLink + ".")
