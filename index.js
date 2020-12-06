@@ -122,10 +122,15 @@ ${inscriptionMessageLink}
     if (msg.channel.type === 'dm' && msg.author !== process.env.BOT_ID) {
         if (alreadyParticipating(msg.author.id)) {
             if (msg.content.startsWith("!lettre ")) {
-                const lettre = msg.content.substr(8)
-                participants[msg.author.id].lettre = lettre
-                msg.author.send(`Merci, j'ai bien reçu ta lettre ! 🎅 Tu peux la modifier jusqu'au lancement de l'évènement qui aura lieu le ${inscriptionEndDateStr}.`)
-                sendLettre(msg.author.id, msg.author.id)
+                if (inscriptionsStillOpen()) {
+                    const lettre = msg.content.substr(8)
+                    participants[msg.author.id].lettre = lettre
+                    msg.author.send(`Merci, j'ai bien reçu ta lettre ! 🎅 Tu peux la modifier jusqu'au lancement de l'évènement qui aura lieu le ${inscriptionEndDateStr}.`)
+                    sendLettre(msg.author.id, msg.author.id)
+                }
+                else {
+                    msg.author.send("Oh 🎅 ! Les inscriptions sont terminées et ta lettre a déjà été envoyée, tu ne peux plus la modifier !")
+                }
             }
         }
         else {
