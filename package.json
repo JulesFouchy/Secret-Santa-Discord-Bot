@@ -3,7 +3,11 @@
   "version": "1.0.0",
   "description": "Secret-Santa-Discord-Bot",
   "main": "index.js",
+  "engines": {
+    "node": "12.16.0"
+  },
   "scripts": {
+    "start": "node app.js",
     "dev": "nodemon index.js"
   },
   "repository": {
