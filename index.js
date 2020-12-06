@@ -12,6 +12,7 @@ const RED = '#C40808'
 
 // ---------------
 let inscriptionMessageID
+let inscriptionMessageLink
 let participants = {}
 let associations = {}
 
@@ -72,7 +73,10 @@ const sendTargetInfo = (id) => {
 client.on('ready', () => {
     client.channels.cache.get(process.env.CHANNEL_ID)
         .send("Inscrivez vous !")
-        .then(msg => inscriptionMessageID = msg.id)
+        .then(msg => {
+            inscriptionMessageID = msg.id 
+            inscriptionMessageLink = msg.url
+        })
 })
 
 client.on('message', (msg) => {
@@ -95,7 +99,7 @@ client.on('message', (msg) => {
             }
         }
         else {
-            msg.author.send("Avant toute chose, tu dois t'inscrire en réagissant \"🎅\" sur mon message dans le channel E-Tacraft de la E-Taverne.")
+            msg.author.send("Avant toute chose, tu dois t'inscrire en réagissant \"🎅\" sur mon message dans le channel E-Tacraft de la E-Taverne : " + inscriptionMessageLink)
         }
     }
 })
