@@ -7,7 +7,8 @@ client.login(process.env.TOKEN)
 // ---------------
 // -- Parameters--
 // ---------------
-const event_start_date = '15 décembre'
+const inscriptionEndDate = new Date('December 12, 2020 23:59:59')
+const inscriptionEndDateStr = 'Samedi 12 décembre à 23h59'
 const RED = '#C40808'
 
 // ---------------
@@ -96,7 +97,7 @@ client.on('message', (msg) => {
             msg.channel.send(
 `Vous pouvez vous inscrire sur ce message : 
 ${inscriptionMessageLink}
-Les inscriptions ferment le ${event_start_date}`
+Les inscriptions ferment le ${inscriptionEndDateStr}`
             )
         }
     }
@@ -106,7 +107,7 @@ Les inscriptions ferment le ${event_start_date}`
             if (msg.content.startsWith("!lettre ")) {
                 const lettre = msg.content.substr(8)
                 participants[msg.author.id].lettre = lettre
-                msg.author.send(`Merci, j'ai bien reçu ta lettre ! Tu peux la modifier jusqu'au lancement de l'évènement le ${event_start_date}`)
+                msg.author.send(`Merci, j'ai bien reçu ta lettre ! Tu peux la modifier jusqu'au lancement de l'évènement le ${inscriptionEndDateStr}`)
                 sendLettre(msg.author.id, msg.author.id)
             }
             if (msg.content.startsWith("!info")) {
