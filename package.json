@@ -1,0 +1,26 @@
+{
+  "name": "secret-santa-discord-bot",
+  "version": "1.0.0",
+  "description": "Secret-Santa-Discord-Bot",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JulesFouchy/Secret-Santa-Discord-Bot.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JulesFouchy/Secret-Santa-Discord-Bot/issues"
+  },
+  "homepage": "https://github.com/JulesFouchy/Secret-Santa-Discord-Bot#readme",
+  "dependencies": {
+    "discord.js": "^12.5.1"
+  },
+  "devDependencies": {
+    "dotenv": "^8.2.0"
+  }
+}
