@@ -78,15 +78,21 @@ const userProfile = (id) => {
 
 const sendTargetInfo = (id) => {
     const user = participants[id].user
-    user.send("🎅 Hohoho ! Cette année tu seras le Père Noël pour :")
+    user.send("🎅 Hohoho ! 🎅\nCette année tu seras le Père Noël pour :")
     user.send(userProfile(associations[id]))
-    user.send("Voici la lettre qu'iel t'a laissé :")
+    user.send("Voici la lettre qu'iel t'a laissé.e :")
     sendLettre(associations[id], id)
 }
 
 client.on('ready', () => {
     client.channels.cache.get(process.env.CHANNEL_ID)
-        .send("Inscrivez vous !")
+        .send(
+`🎅 Hohoho ! 🎅
+Je suis le Père Noël cubique de la E-Taverne ! Je suis ici pour vous proposer de vous échanger des cadeaux entre vous dans **Minecraft**.
+:eyes: Pour participer il suffit de réagir avec 🎅 à ce message.
+:clock: Les inscriptions se terminent le ${inscriptionEndDateStr}.
+:teddy_bear: À ce moment là, vous recevrez tous le nom d'une personne qu'il vous incombera de remplir de joie en lui offrant une magnifique surprise !
+En attendant, soyez sages et ne brûlez pas la maison de vos amis :wink: :fire:`)
         .then(msg => {
             inscriptionMessageID = msg.id 
             inscriptionMessageLink = msg.url
@@ -98,7 +104,7 @@ client.on('message', (msg) => {
     if (msg.channel.id === process.env.CHANNEL_ID) {
         // Informations 
         if (msg.content.startsWith("!secret-santa")) {
-            msg.channel.send("Les participants actuellement inscrits au Secret Santa E-Tacraft sont : ")
+            msg.channel.send("🎅 Hohoho ! 🎅\nLes participants actuellement inscrits au Secret Santa E-Tacraft sont : ")
             Object.keys(participants).forEach(id =>
                 msg.channel.send(new Discord.MessageEmbed()
                         .setColor(RED)
@@ -108,7 +114,7 @@ client.on('message', (msg) => {
             msg.channel.send(
 `Vous pouvez vous inscrire sur ce message : 
 ${inscriptionMessageLink}
-Les inscriptions ferment le ${inscriptionEndDateStr}`
+🎅 Attention 🎅 Les inscriptions ferment le ${inscriptionEndDateStr}`
             )
         }
     }
@@ -118,16 +124,12 @@ Les inscriptions ferment le ${inscriptionEndDateStr}`
             if (msg.content.startsWith("!lettre ")) {
                 const lettre = msg.content.substr(8)
                 participants[msg.author.id].lettre = lettre
-                msg.author.send(`Merci, j'ai bien reçu ta lettre ! Tu peux la modifier jusqu'au lancement de l'évènement le ${inscriptionEndDateStr}`)
-                sendLettre(msg.author.id, msg.author.id)
-            }
-            if (msg.content.startsWith("!info")) {
-                msg.author.send("Ta lettre")
+                msg.author.send(`Merci, j'ai bien reçu ta lettre ! 🎅 Tu peux la modifier jusqu'au lancement de l'évènement qui aura lieu le ${inscriptionEndDateStr}.`)
                 sendLettre(msg.author.id, msg.author.id)
             }
         }
         else {
-            msg.author.send("Avant toute chose, tu dois t'inscrire en réagissant \"🎅\" sur mon message dans le channel E-Tacraft de la E-Taverne : " + inscriptionMessageLink)
+            msg.author.send("Avant toute chose, tu dois t'inscrire en réagissant \"🎅\" sur mon message dans le channel E-Tacraft de la E-Taverne : " + inscriptionMessageLink + ".")
         }
     }
 })
@@ -136,11 +138,11 @@ client.on('messageReactionAdd', async(e, user) => {
     if (e.message.id === inscriptionMessageID && e.emoji.identifier === '%F0%9F%8E%85') {
         if (inscriptionsStillOpen()) {
             createParticipantIfNeeded(user)
-            user.send("🎅 🎅 🎅 🎅 🎅\nHohoho ! Tu es bien inscrit pour le secret santa E-Tacraft !\nTu peux m'envoyer ta lettre en faisant \`\`\`!lettre [tonMessage]\`\`\` ici même\n🎅 🎅 🎅 🎅 🎅")
+            user.send("🎅 Hohoho ! 🎅\nTu es bien inscrit pour le Secret Santa E-Tacraft !\nTu peux m'envoyer ta lettre ici-même en faisant \`\`\`!lettre [tonMessage]\`\`\`Elle sera transmise à ton Père Noël attitré afin de l'aider dans sa quête :gift:\nPense bien à indiquer les coordonnées de ta base pour une livraison réussie ! :balloon:")
         }
         else {
             if (participants[user.id] === undefined)
-                user.send("Oh 🎅 ! Malheureusement les inscriptions sont terminées et les Pères Noëls ont déjà été attribués.\n Contacte Nahjkag (Jules Fouchy#9268) pour arranger ça :wink:")
+                user.send("Oh 🎅 ! Malheureusement les inscriptions sont terminées et les Pères Noëls ont déjà été attribués.\nContacte Nahjkag (Jules Fouchy#9268) pour arranger ça :wink:")
         }
     }
 })
@@ -148,11 +150,11 @@ client.on('messageReactionAdd', async(e, user) => {
 client.on('messageReactionRemove', async(e, user) => {
     if (e.message.id === inscriptionMessageID && e.emoji.identifier === '%F0%9F%8E%85') {
         if (inscriptionsStillOpen()) {
-            user.send("Oh 🎅 ! Tu es bien désinscrit du secret santa E-Tacraft.")
+            user.send("Oh 🎅 ! Tu es bien désinscrit du Secret Santa E-Tacraft.")
             delete participants[user.id]
         }
         else {
-            user.send(`Hohoho 🎅 ! L'évènement a été lancé, tu ne peux plus te désinscrire ! **${participants[associations[user.id]].user.username}** compte sur toi !`)
+            user.send(`Oh 🎅 ! L'évènement a été lancé, tu ne peux plus te désinscrire ! **${participants[associations[user.id]].user.username}** compte sur toi !`)
         }
     }
 })
