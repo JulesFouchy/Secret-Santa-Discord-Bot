@@ -11,6 +11,7 @@ const event_start_date = '15 décembre'
 const RED = '#C40808'
 
 // ---------------
+let inscriptionMessageID
 let participants = {}
 let associations = {}
 
@@ -67,19 +68,14 @@ const sendTargetInfo = (id) => {
     sendLettre(associations[id], id)
 }
 
+
+client.on('ready', () => {
+    client.channels.cache.get(process.env.CHANNEL_ID)
+        .send("Inscrivez vous !")
+        .then(msg => inscriptionMessageID = msg.id)
+})
+
 client.on('message', (msg) => {
-    // Read public channel
-    if (msg.channel.id === process.env.CHANNEL_ID) {
-        // Join the Secret Santa 
-        if (msg.content.startsWith("!join")) {
-            if (createParticipantIfNeeded(msg.author)) {
-                msg.author.send("🎅 🎅 🎅 🎅 🎅\nHohoho ! Tu es bien inscrit pour le secret santa E-Tacraft !\nTu peux m'envoyer ta lettre en faisant \`\`\`!lettre [tonMessage]\`\`\` ici même\n🎅 🎅 🎅 🎅 🎅")
-            }
-            else {
-                msg.reply("Merci, mais tu es déjà inscrit comme participant :wink:")
-            }
-        }
-    }
     // Read DMs
     if (msg.channel.type === 'dm' && msg.author !== process.env.BOT_ID) {
         if (alreadyParticipating(msg.author.id)) {
@@ -99,7 +95,23 @@ client.on('message', (msg) => {
             }
         }
         else {
-            msg.author.send("Avant toute chose, tu dois t'inscrire à l'évènement en envoyant \"!join\" dans le channel E-Taverne dédié :wink:")
+            msg.author.send("Avant toute chose, tu dois t'inscrire en réagissant \"🎅\" sur mon message dans le channel E-Tacraft de la E-Taverne.")
         }
+    }
+})
+
+client.on('messageReactionAdd', async(e, user) => {
+    if (e.message.id === inscriptionMessageID && e.emoji.identifier === '%F0%9F%8E%85') {
+        createParticipantIfNeeded(user)
+        user.send("🎅 🎅 🎅 🎅 🎅\nHohoho ! Tu es bien inscrit pour le secret santa E-Tacraft !\nTu peux m'envoyer ta lettre en faisant \`\`\`!lettre [tonMessage]\`\`\` ici même\n🎅 🎅 🎅 🎅 🎅")
+        console.log(participants)
+    }
+})
+
+client.on('messageReactionRemove', async(e, user) => {
+    if (e.message.id === inscriptionMessageID && e.emoji.identifier === '%F0%9F%8E%85') {
+        user.send("Oh 🎅 ! Tu es bien désinscrit du secret santa E-Tacraft.")
+        delete participants[user.id]
+        console.log(participants)
     }
 })
