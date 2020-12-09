@@ -17,7 +17,6 @@ const RED = '#C40808'
 // ---------------
 
 const MongoClient = require('mongodb').MongoClient
-const ObjectId = require('mongodb').ObjectID
 const mongoClient = new MongoClient(process.env.DB_CONNECTION, { useNewUrlParser: true, useUnifiedTopology: true }).connect()
 
 const dbRequest = async (req) => {
@@ -54,10 +53,49 @@ const DBremoveParticipant = async (user) => {
     )
 }
 
+const DBaddTarget = async (participant, target) => {
+    await dbRequest(db => 
+            db.collection('participants')
+            .updateOne({
+                userid: {$eq: participant.user.id}
+            },
+            {
+                $set: { target: target.user.id }
+            })
+)
+}
+
+const DBapplyToParticipants = (cb) => {
+    return dbRequest(db => 
+        db.collection('participants').find({}).toArray( (err, result) => {
+            if (err) {
+                console.log('ERR')
+                console.log(err)
+            }
+            else {
+                result.forEach(participant => cb(participant))
+            }
+        })
+    )
+}
+
+const DBapplyToParticipantsArray = (cb) => {
+    return dbRequest(db => 
+        db.collection('participants').find({}).toArray( (err, result) => {
+            if (err) {
+                console.log('ERR')
+                console.log(err)
+            }
+            else {
+                cb(result)
+            }
+        })
+    )
+}
+
 // ---------------
 let inscriptionMessageID
 let inscriptionMessageLink
-let participants = {}
 let associations = {}
 
 let areInscriptionsStillOpen = true
@@ -65,9 +103,11 @@ const inscriptionsStillOpen = () => {
     return areInscriptionsStillOpen
 }
 
-const closeInscriptions = () => {
-    createAssociations()
-    Object.keys(participants).forEach(id => sendTargetInfo(id))
+const closeInscriptions = async () => {
+    await createAssociations()
+    DBapplyToParticipants(participant => {
+        sendTargetInfo(participant.user.id)
+    })
     areInscriptionsStillOpen = false
 }
 
@@ -84,11 +124,13 @@ const shuffle = (_arr) => {
     return arr;
 }
 
-const createAssociations = () => {
-    const IDs = shuffle(Object.keys(participants))
-    for (let k = 0; k < IDs.length; ++k) {
-        associations[IDs[k]] = IDs[(k+1)%IDs.length]
-    }
+const createAssociations = async () => {
+    await DBapplyToParticipantsArray(async participants => {
+        const shuffled = shuffle(participants)
+        for (let k = 0; k < participants.length; ++k) {
+            await DBaddTarget(shuffled[k], shuffled[(k+1)%shuffled.length])
+        }
+    })
 }
 
 const sendLettre = (from, to) => {
