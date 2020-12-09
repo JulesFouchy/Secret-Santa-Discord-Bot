@@ -38,7 +38,6 @@ const DBaddParticipant = async (user) => {
             db.collection('participants')
             .insertOne({
                 lettre: '',
-                user,
                 userid: user.id,
             })
     )
@@ -57,10 +56,10 @@ const DBaddTarget = async (participant, target) => {
     await dbRequest(db => 
             db.collection('participants')
             .updateOne({
-                userid: {$eq: participant.user.id}
+                userid: {$eq: participant.userid}
             },
             {
-                $set: { target: target.user.id }
+                $set: {targetid: target.userid}
             })
 )
 }
@@ -93,6 +92,12 @@ const DBapplyToParticipantsArray = (cb) => {
     )
 }
 
+const DBapplyToTarget = (participant, cb) => {
+    return dbRequest(db => 
+            db.collection('participants').findOne({userid: {$eq: participant.targetid}}).then(target => cb(target))
+    )
+}
+
 const DBifParticipating = (userid, cb) => {
     return dbRequest(db => 
             db.collection('participants').findOne({userid: {$eq: userid}}).then(participant => cb(participant !== null))
@@ -112,13 +117,9 @@ const inscriptionsStillOpen = () => {
 const closeInscriptions = async () => {
     await createAssociations()
     DBapplyToParticipants(participant => {
-        sendTargetInfo(participant.user.id)
+        sendTargetInfo(participant)
     })
     areInscriptionsStillOpen = false
-}
-
-const alreadyParticipating = (id) => {
-    return participants[id] !== undefined
 }
 
 const shuffle = (_arr) => {
@@ -147,23 +148,26 @@ const sendLettre = (from, to) => {
     )
 }
 
-const userProfile = (id) => {
-    const user = participants[id].user
+const userProfile = (user) => {
     return new Discord.MessageEmbed()
         .setColor(RED)
         .setTitle(user.tag)
         .setImage(user.avatarURL())
 }
 
-const sendTargetInfo = (id) => {
-    const user = participants[id].user
-    user.send("🎅 Hohoho ! 🎅\nCette année tu seras le Père Noël pour :")
-    user.send(userProfile(associations[id]))
-    user.send("Voici la lettre qu'iel t'a laissé.e :")
-    sendLettre(associations[id], id)
+const sendTargetInfo = (participant) => {
+    DBapplyToTarget(participant, target => {
+        client.users.fetch(participant.userid).then(user => {
+            user.send("🎅 Hohoho ! 🎅\nCette année tu seras le Père Noël pour :")
+            user.send(userProfile(associations[id]))
+            user.send("Voici la lettre qu'iel t'a laissé.e :")
+            sendLettre(associations[id], id)
+        })
+    })
 }
 
 client.on('ready', () => {
+    // closeInscriptions()
     client.channels.cache.get(process.env.CHANNEL_ID)
         .send(
 `🎅 Hohoho ! 🎅
@@ -199,25 +203,27 @@ ${inscriptionMessageLink}
     }
     // Read DMs
     if (msg.channel.type === 'dm' && msg.author !== process.env.BOT_ID) {
-        if (alreadyParticipating(msg.author.id)) {
-            if (msg.content.startsWith("!lettre ")) {
-                if (inscriptionsStillOpen()) {
-                    const lettre = msg.content.substr(8)
-                    participants[msg.author.id].lettre = lettre
-                    msg.author.send(`Merci, j'ai bien reçu ta lettre ! 🎅 Tu peux la modifier jusqu'au lancement de l'évènement qui aura lieu le ${inscriptionEndDateStr}.`)
-                    sendLettre(msg.author.id, msg.author.id)
+        DBifParticipating(msg.author.id, isParticipating => {
+            if (isParticipating) {
+                if (msg.content.startsWith("!lettre ")) {
+                    if (inscriptionsStillOpen()) {
+                        const lettre = msg.content.substr(8)
+                        participants[msg.author.id].lettre = lettre
+                        msg.author.send(`Merci, j'ai bien reçu ta lettre ! 🎅 Tu peux la modifier jusqu'au lancement de l'évènement qui aura lieu le ${inscriptionEndDateStr}.`)
+                        sendLettre(msg.author.id, msg.author.id)
+                    }
+                    else {
+                        msg.author.send("Oh 🎅 ! Les inscriptions sont terminées et ta lettre a déjà été envoyée, tu ne peux plus la modifier !")
+                    }
                 }
                 else {
-                    msg.author.send("Oh 🎅 ! Les inscriptions sont terminées et ta lettre a déjà été envoyée, tu ne peux plus la modifier !")
+                    msg.author.send("Oh 🎅 ! Je ne connais pas cette commande. À vrai dire je connais uniquement la commande !lettre")
                 }
             }
             else {
-                msg.author.send("Oh 🎅 ! Je ne connais pas cette commande. À vrai dire je connais uniquement la commande !lettre")
+                msg.author.send("Avant toute chose, tu dois t'inscrire en réagissant \"🎅\" sur mon message dans le channel E-Tacraft de la E-Taverne : " + inscriptionMessageLink + ".")
             }
-        }
-        else {
-            msg.author.send("Avant toute chose, tu dois t'inscrire en réagissant \"🎅\" sur mon message dans le channel E-Tacraft de la E-Taverne : " + inscriptionMessageLink + ".")
-        }
+        })
     }
 })
 
