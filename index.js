@@ -8,8 +8,8 @@ client.login(process.env.TOKEN)
 // ---------------
 // -- Parameters--
 // ---------------
-const inscriptionEndDate = new Date('December 12, 2020 23:59:59')
-const inscriptionEndDateStr = 'Samedi 12 décembre à 23h59'
+const inscriptionEndDate = new Date('December 13, 2020 23:59:59')
+const inscriptionEndDateStr = 'Dimanche 13 décembre à 23h59'
 const RED = '#C40808'
 
 // ---------------
