@@ -177,24 +177,6 @@ En attendant, soyez sages et ne brûlez pas la maison de vos amis :wink: :fire:`
 })
 
 client.on('message', (msg) => {
-    // Read public channel
-    if (msg.channel.id === process.env.CHANNEL_ID) {
-        // Informations 
-        if (msg.content.startsWith("!secret-santa")) {
-            msg.channel.send("🎅 Hohoho ! 🎅\nLes participants actuellement inscrits au Secret Santa E-Tacraft sont : ")
-            Object.keys(participants).forEach(id =>
-                msg.channel.send(new Discord.MessageEmbed()
-                        .setColor(RED)
-                        .setTitle(participants[id].user.username)
-                )
-            )
-            msg.channel.send(
-`Vous pouvez vous inscrire sur ce message : 
-${inscriptionMessageLink}
-🎅 Attention 🎅 Les inscriptions ferment le ${inscriptionEndDateStr}`
-            )
-        }
-    }
     // Read DMs
     if (msg.channel.type === 'dm' && msg.author !== process.env.BOT_ID) {
         DBifParticipating(msg.author.id, isParticipating => {
