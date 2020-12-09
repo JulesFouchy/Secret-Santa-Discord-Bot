@@ -8,7 +8,7 @@
   },
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "set DEBUG=true && nodemon index.js"
   },
   "repository": {
     "type": "git",
@@ -22,7 +22,8 @@
   },
   "homepage": "https://github.com/JulesFouchy/Secret-Santa-Discord-Bot#readme",
   "dependencies": {
-    "discord.js": "^12.5.1"
+    "discord.js": "^12.5.1",
+    "mongodb": "^3.6.3"
   },
   "devDependencies": {
     "dotenv": "^8.2.0"
