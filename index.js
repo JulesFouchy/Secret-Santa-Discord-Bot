@@ -104,13 +104,13 @@ const DBifParticipating = (userid, cb) => {
     )
 }
 
+
 // ---------------
 let inscriptionMessageID
 let inscriptionMessageLink
 
-let areInscriptionsStillOpen = true
-const inscriptionsStillOpen = () => {
-    return areInscriptionsStillOpen
+const areInscriptionsStillOpen = () => {
+    return new Date() < inscriptionEndDate
 }
 
 const closeInscriptions = async () => {
@@ -118,7 +118,6 @@ const closeInscriptions = async () => {
     DBapplyToParticipants(participant => {
         sendTargetInfo(participant)
     })
-    areInscriptionsStillOpen = false
 }
 
 const shuffle = (_arr) => {
@@ -163,7 +162,6 @@ const sendTargetInfo = (participant) => {
 }
 
 client.on('ready', () => {
-    closeInscriptions()
     client.channels.cache.get(process.env.CHANNEL_ID)
         .send(
 `🎅 Hohoho ! 🎅
@@ -202,7 +200,7 @@ ${inscriptionMessageLink}
         DBifParticipating(msg.author.id, isParticipating => {
             if (isParticipating) {
                 if (msg.content.startsWith("!lettre ")) {
-                    if (inscriptionsStillOpen()) {
+                    if (areInscriptionsStillOpen()) {
                         const lettre = msg.content.substr(8)
                         participants[msg.author.id].lettre = lettre
                         msg.author.send(`Merci, j'ai bien reçu ta lettre ! 🎅 Tu peux la modifier jusqu'au lancement de l'évènement qui aura lieu le ${inscriptionEndDateStr}.`)
@@ -225,7 +223,7 @@ ${inscriptionMessageLink}
 
 client.on('messageReactionAdd', async(e, user) => {
     if (e.message.id === inscriptionMessageID && e.emoji.identifier === '%F0%9F%8E%85') {
-        if (inscriptionsStillOpen()) {
+        if (areInscriptionsStillOpen()) {
             DBaddParticipant(user)
             user.send("🎅 Hohoho ! 🎅\nTu es bien inscrit pour le Secret Santa E-Tacraft !\nTu peux m'envoyer ta lettre ici-même en faisant \`\`\`!lettre [tonMessage]\`\`\`Elle sera transmise à ton Père Noël attitré afin de l'aider dans sa quête :gift:\nPense bien à indiquer les coordonnées de ta base pour une livraison réussie ! :balloon:")
         }
@@ -238,7 +236,7 @@ client.on('messageReactionAdd', async(e, user) => {
 
 client.on('messageReactionRemove', async(e, user) => {
     if (e.message.id === inscriptionMessageID && e.emoji.identifier === '%F0%9F%8E%85') {
-        if (inscriptionsStillOpen()) {
+        if (areInscriptionsStillOpen()) {
             DBremoveParticipant(user)
             user.send("Oh 🎅 ! Tu es bien désinscrit du Secret Santa E-Tacraft.")
         }
@@ -249,7 +247,7 @@ client.on('messageReactionRemove', async(e, user) => {
 })
 
 const checkDate = () => {
-    if (new Date() < inscriptionEndDate) {
+    if (areInscriptionsStillOpen()) {
         setTimeout(checkDate, 60 * 1000)
     }
     else {
