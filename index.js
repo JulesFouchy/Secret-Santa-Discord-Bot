@@ -117,7 +117,19 @@ const DBputMessageInfos = async (id, link) => {
             inscriptionMessageID: id,
             inscriptionMessageLink: link,
         })
-)
+    )
+}
+
+const DBputLettre = async (userid, lettre) => {
+    await dbRequest(db => 
+        db.collection('participants')
+        .updateOne({
+            userid: {$eq: userid}
+        },
+        {
+            $set: {lettre: lettre}
+        })
+    )
 }
 
 // ---------------
@@ -158,6 +170,13 @@ const userProfile = (user) => {
         .setImage(user.avatarURL())
 }
 
+const sendLettre = (user, lettre) => {
+    user.send(new Discord.MessageEmbed()
+        .setColor(RED)
+        .setDescription(lettre)
+    )
+}
+
 const sendTargetInfo = (participant) => {
     DBwithParticipant(participant.targetid, target => {
         client.users.fetch(participant.userid).then(user => {
@@ -165,10 +184,7 @@ const sendTargetInfo = (participant) => {
                 user.send("🎅 Hohoho ! 🎅\nCette année tu seras le Père Noël pour :")
                 user.send(userProfile(targetUser))
                 user.send("Voici la lettre qu'iel t'a laissé.e :")
-                user.send(new Discord.MessageEmbed()
-                    .setColor(RED)
-                    .setDescription(target.lettre)
-                )
+                sendLettre(user, target.lettre)
             })
         })
     })
@@ -194,6 +210,7 @@ En attendant, soyez sages et ne brûlez pas la maison de vos amis :wink: :fire:`
 }
 
 client.on('ready', () => {
+    closeInscriptions()
     DBwithMessageInfos(infos => {
         if (infos === null) {
             sendPresentationMessage()
@@ -214,9 +231,9 @@ client.on('message', (msg) => {
                 if (msg.content.startsWith("!lettre ")) {
                     if (areInscriptionsStillOpen()) {
                         const lettre = msg.content.substr(8)
-                        participants[msg.author.id].lettre = lettre
+                        DBputLettre(msg.author.id, lettre)
                         msg.author.send(`Merci, j'ai bien reçu ta lettre ! 🎅 Tu peux la modifier jusqu'au lancement de l'évènement qui aura lieu le ${inscriptionEndDateStr}.`)
-                        sendLettre(msg.author.id, msg.author.id)
+                        sendLettre(msg.author, lettre)
                     }
                     else {
                         msg.author.send("Oh 🎅 ! Les inscriptions sont terminées et ta lettre a déjà été envoyée, tu ne peux plus la modifier !")
