@@ -92,9 +92,9 @@ const DBapplyToParticipantsArray = (cb) => {
     )
 }
 
-const DBapplyToTarget = (participant, cb) => {
+const DBwithParticipant = (userid, cb) => {
     return dbRequest(db => 
-            db.collection('participants').findOne({userid: {$eq: participant.targetid}}).then(target => cb(target))
+            db.collection('participants').findOne({userid: {$eq: userid}}).then(participant => cb(participant))
     )
 }
 
@@ -146,7 +146,7 @@ const userProfile = (user) => {
 }
 
 const sendTargetInfo = (participant) => {
-    DBapplyToTarget(participant, target => {
+    DBwithParticipant(participant.targetid, target => {
         client.users.fetch(participant.userid).then(user => {
             client.users.fetch(target.userid).then(targetUser => {
                 user.send("🎅 Hohoho ! 🎅\nCette année tu seras le Père Noël pour :")
@@ -210,8 +210,7 @@ client.on('messageReactionAdd', async(e, user) => {
             user.send("🎅 Hohoho ! 🎅\nTu es bien inscrit pour le Secret Santa E-Tacraft !\nTu peux m'envoyer ta lettre ici-même en faisant \`\`\`!lettre [tonMessage]\`\`\`Elle sera transmise à ton Père Noël attitré afin de l'aider dans sa quête :gift:\nPense bien à indiquer les coordonnées de ta base pour une livraison réussie ! :balloon:")
         }
         else {
-            if (participants[user.id] === undefined)
-                user.send("Oh 🎅 ! Malheureusement les inscriptions sont terminées et les Pères Noëls ont déjà été attribués.\nContacte Nahjkag (Jules Fouchy#9268) pour arranger ça :wink:")
+            user.send("Oh 🎅 ! Malheureusement les inscriptions sont terminées et les Pères Noëls ont déjà été attribués.\nContacte Nahjkag (Jules Fouchy#9268) pour arranger ça :wink:")
         }
     }
 })
@@ -223,7 +222,13 @@ client.on('messageReactionRemove', async(e, user) => {
             user.send("Oh 🎅 ! Tu es bien désinscrit du Secret Santa E-Tacraft.")
         }
         else {
-            user.send(`Oh 🎅 ! L'évènement a été lancé, tu ne peux plus te désinscrire ! **${participants[associations[user.id]].user.username}** compte sur toi !`)
+            DBwithParticipant(user.id, participant => {
+                DBwithParticipant(participant.targetid, target => {
+                    client.users.fetch(target.userid).then(targetUser => {
+                        user.send(`Oh 🎅 ! L'évènement a été lancé, tu ne peux plus te désinscrire ! **${targetUser.username}** compte sur toi !`)
+                    })
+                })
+            })
         }
     }
 })
