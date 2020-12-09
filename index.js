@@ -211,7 +211,6 @@ En attendant, soyez sages et ne brûlez pas la maison de vos amis :wink: :fire:`
 }
 
 client.on('ready', () => {
-    closeInscriptions()
     DBwithMessageInfos(infos => {
         if (infos === null) {
             sendPresentationMessage()
