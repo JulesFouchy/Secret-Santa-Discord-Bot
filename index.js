@@ -107,7 +107,6 @@ const DBifParticipating = (userid, cb) => {
 // ---------------
 let inscriptionMessageID
 let inscriptionMessageLink
-let associations = {}
 
 let areInscriptionsStillOpen = true
 const inscriptionsStillOpen = () => {
@@ -140,14 +139,6 @@ const createAssociations = async () => {
     })
 }
 
-const sendLettre = (from, to) => {
-    console.log(participants[from])
-    participants[to].user.send(new Discord.MessageEmbed()
-        .setColor(RED)
-        .setDescription(participants[from].lettre)
-    )
-}
-
 const userProfile = (user) => {
     return new Discord.MessageEmbed()
         .setColor(RED)
@@ -158,16 +149,21 @@ const userProfile = (user) => {
 const sendTargetInfo = (participant) => {
     DBapplyToTarget(participant, target => {
         client.users.fetch(participant.userid).then(user => {
-            user.send("🎅 Hohoho ! 🎅\nCette année tu seras le Père Noël pour :")
-            user.send(userProfile(associations[id]))
-            user.send("Voici la lettre qu'iel t'a laissé.e :")
-            sendLettre(associations[id], id)
+            client.users.fetch(target.userid).then(targetUser => {
+                user.send("🎅 Hohoho ! 🎅\nCette année tu seras le Père Noël pour :")
+                user.send(userProfile(targetUser))
+                user.send("Voici la lettre qu'iel t'a laissé.e :")
+                user.send(new Discord.MessageEmbed()
+                    .setColor(RED)
+                    .setDescription(target.lettre)
+                )
+            })
         })
     })
 }
 
 client.on('ready', () => {
-    // closeInscriptions()
+    closeInscriptions()
     client.channels.cache.get(process.env.CHANNEL_ID)
         .send(
 `🎅 Hohoho ! 🎅
