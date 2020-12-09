@@ -139,9 +139,10 @@ const areInscriptionsStillOpen = () => {
 }
 
 const closeInscriptions = async () => {
-    await createAssociations()
-    DBapplyToParticipants(participant => {
-        sendTargetInfo(participant)
+    createAssociations().then(() => {
+        DBapplyToParticipants(participant => {
+            sendTargetInfo(participant)
+        })
     })
 }
 
