@@ -104,10 +104,23 @@ const DBifParticipating = (userid, cb) => {
     )
 }
 
+const DBwithMessageInfos = (cb) => {
+    return dbRequest(db => 
+            db.collection('infos').findOne({}).then(cb)
+    )
+}
+
+const DBputMessageInfos = async (id, link) => {
+    await dbRequest(db => 
+        db.collection('infos')
+        .insertOne({
+            inscriptionMessageID: id,
+            inscriptionMessageLink: link,
+        })
+)
+}
 
 // ---------------
-let inscriptionMessageID
-let inscriptionMessageLink
 
 const areInscriptionsStillOpen = () => {
     return new Date() < inscriptionEndDate
@@ -161,19 +174,36 @@ const sendTargetInfo = (participant) => {
     })
 }
 
-client.on('ready', () => {
+let inscriptionMessageID
+let inscriptionMessageLink
+
+const sendPresentationMessage = () => {
     client.channels.cache.get(process.env.CHANNEL_ID)
         .send(
 `🎅 Hohoho ! 🎅
 Je suis le Père Noël cubique de la E-Taverne ! Je suis ici pour vous proposer de vous échanger des cadeaux entre vous dans **Minecraft**.
-:eyes: Pour participer il suffit de réagir avec 🎅 à ce message.
+:eyes: Pour participer il suffit de réagir avec 🎅 à ce message. Je t'enverrai alors un message de confirmation.
 :clock: Les inscriptions se terminent le ${inscriptionEndDateStr}.
 :teddy_bear: À ce moment là, vous recevrez tous le nom d'une personne qu'il vous incombera de remplir de joie en lui offrant une magnifique surprise !
 En attendant, soyez sages et ne brûlez pas la maison de vos amis :wink: :fire:`)
         .then(msg => {
             inscriptionMessageID = msg.id 
             inscriptionMessageLink = msg.url
+            DBputMessageInfos(inscriptionMessageID, inscriptionMessageLink)
         })
+}
+
+client.on('ready', () => {
+    DBwithMessageInfos(infos => {
+        if (infos === null) {
+            sendPresentationMessage()
+        }
+        else {
+            inscriptionMessageID = infos.inscriptionMessageID
+            inscriptionMessageLink = infos.inscriptionMessageLink
+            client.channels.cache.get(process.env.CHANNEL_ID).messages.fetch(inscriptionMessageID)
+        }
+    })
 })
 
 client.on('message', (msg) => {
@@ -202,6 +232,7 @@ client.on('message', (msg) => {
         })
     }
 })
+
 
 client.on('messageReactionAdd', async(e, user) => {
     if (e.message.id === inscriptionMessageID && e.emoji.identifier === '%F0%9F%8E%85') {
