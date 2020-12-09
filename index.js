@@ -1,5 +1,6 @@
 // Include
-// require('dotenv').config()
+if (process.env.DEBUG)
+    require('dotenv').config()
 const Discord = require('discord.js')
 const client = new Discord.Client()
 client.login(process.env.TOKEN)
@@ -10,6 +11,48 @@ client.login(process.env.TOKEN)
 const inscriptionEndDate = new Date('December 12, 2020 23:59:59')
 const inscriptionEndDateStr = 'Samedi 12 décembre à 23h59'
 const RED = '#C40808'
+
+// ---------------
+// --- Database---
+// ---------------
+
+const MongoClient = require('mongodb').MongoClient
+const ObjectId = require('mongodb').ObjectID
+const mongoClient = new MongoClient(process.env.DB_CONNECTION, { useNewUrlParser: true, useUnifiedTopology: true }).connect()
+
+const dbRequest = async (req) => {
+    try {
+        await mongoClient.then( async (mongoClient) => {
+            const db = mongoClient.db('Secret-Santacraft')
+            await req(db)
+        })
+    }
+    catch(err) {
+        console.log('-----Error while connecting to database-----')
+        console.log(err)
+        console.log('--------------------------------------------')
+    }
+}
+
+const DBaddParticipant = async (user) => {
+    await dbRequest(db => 
+            db.collection('participants')
+            .insertOne({
+                lettre: '',
+                user,
+                userid: user.id,
+            })
+    )
+}
+
+const DBremoveParticipant = async (user) => {
+    await dbRequest(db => 
+            db.collection('participants')
+            .remove({
+                userid: {$eq: user.id}
+            })
+    )
+}
 
 // ---------------
 let inscriptionMessageID
@@ -30,18 +73,6 @@ const closeInscriptions = () => {
 
 const alreadyParticipating = (id) => {
     return participants[id] !== undefined
-}
-
-const createParticipantIfNeeded = (user) => {
-    const id = user.id
-    if (!alreadyParticipating(id)) {
-        participants[id] = {
-            lettre: '',
-            user,
-        }
-        return true
-    }
-    return false
 }
 
 const shuffle = (_arr) => {
@@ -145,7 +176,7 @@ ${inscriptionMessageLink}
 client.on('messageReactionAdd', async(e, user) => {
     if (e.message.id === inscriptionMessageID && e.emoji.identifier === '%F0%9F%8E%85') {
         if (inscriptionsStillOpen()) {
-            createParticipantIfNeeded(user)
+            DBaddParticipant(user)
             user.send("🎅 Hohoho ! 🎅\nTu es bien inscrit pour le Secret Santa E-Tacraft !\nTu peux m'envoyer ta lettre ici-même en faisant \`\`\`!lettre [tonMessage]\`\`\`Elle sera transmise à ton Père Noël attitré afin de l'aider dans sa quête :gift:\nPense bien à indiquer les coordonnées de ta base pour une livraison réussie ! :balloon:")
         }
         else {
@@ -158,8 +189,8 @@ client.on('messageReactionAdd', async(e, user) => {
 client.on('messageReactionRemove', async(e, user) => {
     if (e.message.id === inscriptionMessageID && e.emoji.identifier === '%F0%9F%8E%85') {
         if (inscriptionsStillOpen()) {
+            DBremoveParticipant(user)
             user.send("Oh 🎅 ! Tu es bien désinscrit du Secret Santa E-Tacraft.")
-            delete participants[user.id]
         }
         else {
             user.send(`Oh 🎅 ! L'évènement a été lancé, tu ne peux plus te désinscrire ! **${participants[associations[user.id]].user.username}** compte sur toi !`)
