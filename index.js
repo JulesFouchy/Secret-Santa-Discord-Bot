@@ -93,6 +93,12 @@ const DBapplyToParticipantsArray = (cb) => {
     )
 }
 
+const DBifParticipating = (userid, cb) => {
+    return dbRequest(db => 
+            db.collection('participants').findOne({userid: {$eq: userid}}).then(participant => cb(participant !== null))
+    )
+}
+
 // ---------------
 let inscriptionMessageID
 let inscriptionMessageLink
