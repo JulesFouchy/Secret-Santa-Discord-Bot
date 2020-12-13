@@ -210,6 +210,15 @@ En attendant, soyez sages et ne brûlez pas la maison de vos amis :wink: :fire:`
         })
 }
 
+const checkDate = () => {
+    if (areInscriptionsStillOpen()) {
+        setTimeout(checkDate, 60 * 1000)
+    }
+    else {
+        closeInscriptions()
+    }
+}
+
 client.on('ready', () => {
     DBwithMessageInfos(infos => {
         if (infos === null) {
@@ -221,6 +230,7 @@ client.on('ready', () => {
             client.channels.cache.get(process.env.CHANNEL_ID).messages.fetch(inscriptionMessageID)
         }
     })
+    checkDate()
 })
 
 client.on('message', (msg) => {
@@ -280,14 +290,3 @@ client.on('messageReactionRemove', async(e, user) => {
         }
     }
 })
-
-const checkDate = () => {
-    if (areInscriptionsStillOpen()) {
-        setTimeout(checkDate, 60 * 1000)
-    }
-    else {
-        closeInscriptions()
-    }
-}
-
-checkDate()
